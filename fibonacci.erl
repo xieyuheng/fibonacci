@@ -10,5 +10,5 @@ main() ->
     io:format("~p~n", [fibonacci(10)]),
     io:format("~p~n", [fibonacci(20)]),
     io:format("~p~n", [fibonacci(30)]),
-    io:format("~p~n", [fibonacci(40)]),
-    io:format("~p~n", [fibonacci(35)]).
+    io:format("~p~n", [fibonacci(35)]),
+    io:format("~p~n", [fibonacci(40)]).
