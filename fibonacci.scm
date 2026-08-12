@@ -1,0 +1,15 @@
+(define (fibonacci n)
+  (if (<= n 1)
+      n
+      (+ (fibonacci (- n 1)) (fibonacci (- n 2)))))
+
+(display (fibonacci 10))
+(newline)
+(display (fibonacci 20))
+(newline)
+(display (fibonacci 30))
+(newline)
+(display (fibonacci 35))
+(newline)
+(display (fibonacci 40))
+(newline)

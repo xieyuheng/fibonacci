@@ -1,0 +1,10 @@
+# git
+worktrees
+
+# node
+*.cpuprofile
+
+*.o
+*.so
+*.class
+*.beam
