@@ -8,3 +8,4 @@ worktrees
 *.so
 *.class
 *.beam
+fibonacci
