@@ -2,6 +2,16 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# Some JDK installs (e.g. /usr/lib/jvm/*/bin) are not on minimal PATHs.
+if ! command -v javac >/dev/null 2>&1; then
+  for d in /usr/lib/jvm/*/bin; do
+    if [[ -x "$d/javac" ]]; then
+      export PATH="$d:$PATH"
+      break
+    fi
+  done
+fi
+
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
@@ -79,6 +89,22 @@ if command -v chez-scheme >/dev/null 2>&1; then
   RESULTS+=("$(bench "Chez Scheme" chez-scheme --script fibonacci.scm)")
 else
   RESULTS+=("SKIP_BUILD Chez Scheme")
+fi
+
+# WAT (hand-written WebAssembly in fibonacci.wat)
+if command -v wat2wasm >/dev/null 2>&1 && wat2wasm -o "$WORK/fibonacci_wat.wasm" fibonacci.wat 2>/dev/null; then
+  if command -v wasmtime >/dev/null 2>&1; then
+    RESULTS+=("$(bench "WAT / wasmtime" wasmtime run --disable-cache "$WORK/fibonacci_wat.wasm")")
+  else
+    RESULTS+=("SKIP_BUILD WAT / wasmtime")
+  fi
+  if command -v node >/dev/null 2>&1; then
+    RESULTS+=("$(bench "WAT / Node.js" node run-wasi.mjs "$WORK/fibonacci_wat.wasm")")
+  else
+    RESULTS+=("SKIP_BUILD WAT / Node.js")
+  fi
+else
+  RESULTS+=("SKIP_BUILD WAT (no wat2wasm)")
 fi
 
 python3 - "${RESULTS[@]}" <<'EOF'
