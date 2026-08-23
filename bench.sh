@@ -44,6 +44,15 @@ else
   exit 1
 fi
 
+# C -O0 / C -O1 (same source, other optimization levels)
+for opt in 0 1; do
+  if gcc -O$opt -o "$WORK/fibonacci_c_O$opt" fibonacci.c 2>/dev/null; then
+    RESULTS+=("$(bench "C -O$opt" "$WORK/fibonacci_c_O$opt")")
+  else
+    RESULTS+=("SKIP_BUILD C -O$opt")
+  fi
+done
+
 # Go
 if go build -o "$WORK/fibonacci_go" fibonacci.go 2>/dev/null; then
   RESULTS+=("$(bench "Go" "$WORK/fibonacci_go")")
@@ -121,26 +130,40 @@ for r in results:
 
 data.sort(key=lambda x: (x[2] if x[2] is not None else float("inf")))
 
-c_time = next((t for n, t, _ in data if n == "C -O2"), None)
+c_time = next((t for n, t, _ in data if n == "C -O0"), None)
+
+cc_labels = {
+    "C -O0": "C -O0（朴素递归）",
+    "C -O1": "C -O1（寄存器分配）",
+    "C -O2": "C -O2（迭代化）",
+}
 
 lines = []
 lines.append("# Fibonacci Benchmark")
 lines.append("")
-lines.append("Naive recursive `fibonacci(40)` benchmark.")
+lines.append("Same-source naive recursive `fibonacci(40)` across languages;")
+lines.append("the C rows are one `fibonacci.c` compiled at different `-O` levels.")
 lines.append("")
 lines.append("Run with `./bench.sh`.")
 lines.append("")
-lines.append("| Language | Time (s) | Slowness |")
+lines.append("相对用时 = 各行时间 / `C -O0` 时间（1.00 = 与朴素递归 C 相同，越小越快）。")
+lines.append("")
+lines.append("| 语言 | 时间 (s) | 相对用时（速度越快越小） |")
 lines.append("|---|---|---|")
 for name, t, ns in data:
+    label = cc_labels.get(name, name)
     if t is None:
-        lines.append(f"| {name} | skipped (no toolchain) | - |")
+        lines.append(f"| {label} | skipped (no toolchain) | - |")
     else:
-        slowness = t / c_time
-        lines.append(f"| {name} | {t:.3f} | {slowness:.2f} |")
+        rel = t / c_time
+        lines.append(f"| {label} | {t:.3f} | {rel:.2f} |")
 
-with open("README.md", "w") as f:
-    f.write("\n".join(lines) + "\n")
+lines.append("")
+lines.append("## C 优化级别观察（gcc，同一份 `fibonacci.c`）")
+lines.append("")
+lines.append("- **C -O0** — 变量全驻栈、寄存器仅做单语句内的临时搬运；忠实于源码的朴素递归，便于调试。")
+lines.append("- **C -O1** — 生命周期感知的寄存器分配：`n` 住进 callee-saved 寄存器跨递归调用存活；调用次数不变，单次调用变轻。")
+lines.append("- **C -O2** — 编译器着手改写算法：树形递归被改写成奇偶拆分的迭代循环，调用次数降一个数量级以上。")
 
 print("\n".join(lines))
 EOF
