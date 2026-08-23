@@ -146,9 +146,7 @@ lines.append("the C rows are one `fibonacci.c` compiled at different `-O` levels
 lines.append("")
 lines.append("Run with `./bench.sh`.")
 lines.append("")
-lines.append("相对用时 = 各行时间 / `C -O0` 时间（1.00 = 与朴素递归 C 相同，越小越快）。")
-lines.append("")
-lines.append("| 语言 | 时间 (s) | 相对用时（速度越快越小） |")
+lines.append("| 语言 | 用时（秒） | 相对用时 |")
 lines.append("|---|---|---|")
 for name, t, ns in data:
     label = cc_labels.get(name, name)
