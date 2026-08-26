@@ -74,6 +74,21 @@ else
   RESULTS+=("SKIP_BUILD Erlang")
 fi
 
+# Erlang 无 JIT（解释器 flavor）——需要预先构建 beam.emu，见 README 相应章节。
+# 用环境变量 ERL_EMU_BIN 指定 beam.emu 路径，或把它放进 PATH。
+ERL_EMU_BIN="${ERL_EMU_BIN:-$(command -v beam.emu 2>/dev/null || true)}"
+if [ -n "$ERL_EMU_BIN" ]; then
+  ERL_ROOT=$(erl -noshell -eval 'io:format("~s", [code:root_dir()]), init:stop().' 2>/dev/null)
+  ERL_BINDIR=$(ls -d "$ERL_ROOT"/erts-*/bin 2>/dev/null | head -1)
+  if [ -n "$ERL_BINDIR" ]; then
+    RESULTS+=("$(bench "Erlang (no JIT)" env BINDIR="$ERL_BINDIR" "$ERL_EMU_BIN" -- -root "$ERL_ROOT" -bindir "$ERL_BINDIR" -noshell -pa "$WORK" -eval 'fibonacci:main(), init:stop().')")
+  else
+    echo "SKIP Erlang (no JIT): 找不到 erl 的 erts bin 目录"
+  fi
+else
+  echo "SKIP Erlang (no JIT): 未找到 beam.emu，可用环境变量 ERL_EMU_BIN 指定路径"
+fi
+
 # Node.js
 RESULTS+=("$(bench "Node.js" node fibonacci.js)")
 
@@ -136,6 +151,7 @@ cc_labels = {
     "C -O0": "C -O0（朴素递归）",
     "C -O1": "C -O1（寄存器分配）",
     "C -O2": "C -O2（迭代化）",
+    "Erlang (no JIT)": "Erlang（无 JIT）",
 }
 
 lines = []
