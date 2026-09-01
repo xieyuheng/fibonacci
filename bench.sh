@@ -115,6 +115,18 @@ else
   RESULTS+=("SKIP_BUILD Chez Scheme")
 fi
 
+# Emacs Lisp (byte-compiled .elc, not the interpreter)
+if command -v emacs >/dev/null 2>&1; then
+  cp fibonacci.el "$WORK/fibonacci.el"
+  if emacs --batch -f batch-byte-compile "$WORK/fibonacci.el" >/dev/null 2>&1; then
+    RESULTS+=("$(bench "Emacs Lisp" emacs --batch --script "$WORK/fibonacci.elc")")
+  else
+    RESULTS+=("SKIP_BUILD Emacs Lisp")
+  fi
+else
+  RESULTS+=("SKIP_BUILD Emacs Lisp")
+fi
+
 # WAT (hand-written WebAssembly in fibonacci.wat)
 if command -v wat2wasm >/dev/null 2>&1 && wat2wasm -o "$WORK/fibonacci_wat.wasm" fibonacci.wat 2>/dev/null; then
   if command -v wasmtime >/dev/null 2>&1; then
