@@ -13,16 +13,20 @@
 | Go                  | 0.384      | 0.63     |
 | C -O1（寄存器分配） | 0.428      | 0.70     |
 | Chez Scheme         | 0.572      | 0.94     |
+| SBCL                | 0.607      | 0.98     |
 | C -O0（朴素递归）   | 0.608      | 1.00     |
 | WAT / wasmtime      | 0.662      | 1.09     |
 | LuaJIT              | 0.726      | 1.19     |
 | Node.js             | 0.814      | 1.34     |
+| MIT Scheme          | 1.160      | 1.88     |
 | Erlang              | 1.990      | 3.27     |
 | Erlang（无 JIT）    | 2.928      | 4.82     |
 | Emacs Lisp          | 4.720      | 7.51     |
 | Ruby                | 6.306      | 10.37    |
 | Lua                 | 7.955      | 13.09    |
 | Python              | 8.178      | 13.45    |
+
+> 新增行说明：**MIT Scheme** 先用 `compile-file` 原生编译成 `.bci`/`.so` 再加载（直接 `--load` 源码是解释执行，本机约慢 48 倍）；**SBCL** 用 `--script` 并声明 `fixnum`，让算术落到机器整数而非泛型算术。
 
 ## C 优化级别观察（gcc，同一份 `fibonacci.c`）
 

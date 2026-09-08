@@ -115,6 +115,26 @@ else
   RESULTS+=("SKIP_BUILD Chez Scheme")
 fi
 
+# MIT Scheme (native-compiled .bci/.so via compile-file; loading the source
+# directly would run the interpreter and be far slower)
+if command -v mit-scheme >/dev/null 2>&1; then
+  cp fibonacci.scm "$WORK/fibonacci.scm"
+  if (cd "$WORK" && mit-scheme --batch-mode --eval '(compile-file "fibonacci.scm")' >/dev/null 2>&1 </dev/null); then
+    RESULTS+=("$(bench "MIT Scheme" mit-scheme --batch-mode --load "$WORK/fibonacci")")
+  else
+    RESULTS+=("SKIP_BUILD MIT Scheme (compile-file failed)")
+  fi
+else
+  RESULTS+=("SKIP_BUILD MIT Scheme")
+fi
+
+# SBCL
+if command -v sbcl >/dev/null 2>&1; then
+  RESULTS+=("$(bench "SBCL" sbcl --script fibonacci.lisp)")
+else
+  RESULTS+=("SKIP_BUILD SBCL")
+fi
+
 # Emacs Lisp (byte-compiled .elc, not the interpreter)
 if command -v emacs >/dev/null 2>&1; then
   cp fibonacci.el "$WORK/fibonacci.el"
@@ -149,10 +169,10 @@ import sys
 _, *results = sys.argv
 data = []
 for r in results:
-    name, ns = r.rsplit(" ", 1)
-    if name == "SKIP_BUILD":
-        data.append((ns, None, None))
+    if r.startswith("SKIP_BUILD "):
+        data.append((r[len("SKIP_BUILD "):], None, None))
     else:
+        name, ns = r.rsplit(" ", 1)
         data.append((name, int(ns) / 1e9, int(ns)))
 
 data.sort(key=lambda x: (x[2] if x[2] is not None else float("inf")))
